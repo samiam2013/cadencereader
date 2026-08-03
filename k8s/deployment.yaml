@@ -1,0 +1,22 @@
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cadencereader
+  labels:
+    app: cadencereader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cadencereader
+  template:
+    metadata:
+      labels:
+        app: cadencereader
+    spec:
+      containers:
+      - name: cadencereader
+        image: nginxdemos/hello:latest
+        ports:
+        - containerPort: 80
