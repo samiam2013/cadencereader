@@ -16,7 +16,8 @@ spec:
         app: cadencereader
     spec:
       containers:
-      - name: cadencereader
-        image: nginxdemos/hello:latest
-        ports:
-        - containerPort: 80
+        - name: cadencereader
+          image: cadencereader:latest
+          imagePullPolicy: IfNotPresent   # important — otherwise k8s tries to pull from a registry
+          ports:
+            - containerPort: 80
