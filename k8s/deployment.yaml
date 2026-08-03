@@ -21,3 +21,7 @@ spec:
           imagePullPolicy: IfNotPresent   # important — otherwise k8s tries to pull from a registry
           ports:
             - containerPort: 80
+          resources:
+            limits:
+              memory: "200Mi"
+              cpu: "200m"

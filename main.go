@@ -18,7 +18,10 @@ func headers(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+    fmt.Println("binary started")
     http.HandleFunc("/hello", hello)
     http.HandleFunc("/headers", headers)
-    http.ListenAndServe(":80", nil)
+    fmt.Println("server starting")
+    err := http.ListenAndServe(":80", nil)
+    fmt.Println("Error on exit", err)
 }
