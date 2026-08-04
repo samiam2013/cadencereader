@@ -1,4 +1,3 @@
-# deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,11 +30,11 @@ spec:
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 80
-            initialDelaySeconds: 3
+          # readinessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 80
+          #   initialDelaySeconds: 3
           env:
           - name: DATABASE_URL
             valueFrom:
