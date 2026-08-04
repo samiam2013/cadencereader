@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 )
@@ -10,20 +9,13 @@ func index(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello world\n"))
 }
 
-var hcIdx int = 0
-
 func healthCheck(w http.ResponseWriter, r *http.Request) {
-	hcIdx++
-	fmt.Println("health check count", hcIdx)
-	if hcIdx%7 == 0 {
-		fmt.Println("inducing failure")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	// TODO ping database
 	w.WriteHeader(http.StatusOK)
 }
 
 func readyCheck(w http.ResponseWriter, r *http.Request) {
+	// TODO make some meaningful readiness check
 	w.WriteHeader(http.StatusOK)
 }
 
