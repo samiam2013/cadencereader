@@ -14,18 +14,19 @@ func index(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello world\n"))
 }
 
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	// TODO ping database
-	w.WriteHeader(http.StatusOK)
-}
-
-func readyCheck(w http.ResponseWriter, r *http.Request) {
-	// TODO make some meaningful readiness check
-	w.WriteHeader(http.StatusOK)
+func healthCheck(db *pgx.Conn) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Ping(context.Background()); err != nil {
+			slog.Error("Database ping failed", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func main() {
-	slog.Info("binary started")
+	slog.Info("CadenceReader Starting")
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if len(strings.TrimSpace(dbURL)) == 0 {
@@ -39,14 +40,14 @@ func main() {
 		slog.Error("Could not connect to database", "error", err)
 		os.Exit(1)
 	}
+	defer func() { _ = db.Close(ctx) }()
 
 	if err := db.Ping(ctx); err != nil {
 		slog.Error("DB ping failed after opening", "error", err)
 		os.Exit(1)
 	}
 
-	http.HandleFunc("/health", healthCheck)
-	http.HandleFunc("/ready", readyCheck)
+	http.HandleFunc("/health", healthCheck(db))
 
 	http.HandleFunc("/", index)
 
