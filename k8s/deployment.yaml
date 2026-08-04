@@ -36,3 +36,9 @@ spec:
               path: /ready
               port: 80
             initialDelaySeconds: 3
+          env:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: example-db-app
+                key: uri

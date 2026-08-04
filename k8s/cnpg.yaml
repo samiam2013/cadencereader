@@ -1,0 +1,14 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: example-db
+spec:
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4
+  postgresql:
+    synchronous:
+      method: any
+      number: 1
+
+  storage:
+    size: 1Gi
