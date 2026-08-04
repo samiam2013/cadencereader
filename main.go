@@ -1,22 +1,25 @@
 package main
 
 import (
-	"context"
+	"database/sql"
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/golang-migrate/migrate/v4"
+	mpgx "github.com/golang-migrate/migrate/v4/database/pgx"
+	"github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello world\n"))
 }
 
-func healthCheck(db *pgx.Conn) http.HandlerFunc {
+func healthCheck(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := db.Ping(context.Background()); err != nil {
+		if err := db.Ping(); err != nil {
 			slog.Error("Database ping failed", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -34,17 +37,30 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx := context.Background()
-	db, err := pgx.Connect(ctx, dbURL)
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		slog.Error("Could not connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer func() { _ = db.Close(ctx) }()
+	defer func() { _ = db.Close() }()
 
-	if err := db.Ping(ctx); err != nil {
+	if err := db.Ping(); err != nil {
 		slog.Error("DB ping failed after opening", "error", err)
 		os.Exit(1)
+	}
+
+	m, err := OpenMigration(db)
+	if err != nil {
+		slog.Error("Failed to open migrations", "error", err)
+		os.Exit(1)
+	}
+	if err := m.Up(); err != nil {
+		if errors.Is(err, migrate.ErrNoChange) {
+			slog.Info("No migration changes")
+		} else {
+			slog.Error("Failed during up migration", "error", err)
+			os.Exit(1)
+		}
 	}
 
 	http.HandleFunc("/health", healthCheck(db))
@@ -56,4 +72,26 @@ func main() {
 		slog.Error("HTTP server exit", "error", err)
 		os.Exit(1)
 	}
+}
+
+func OpenMigration(db *sql.DB) (*migrate.Migrate, error) {
+
+	instance, err := mpgx.WithInstance(db, &mpgx.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	slog.Info("trying to opent migrations")
+	// TODO: this path is for the docker continer?
+	fSrc, err := (&file.File{}).Open("/migrations")
+	if err != nil {
+		return nil, err
+	}
+	slog.Info("opened migrations, continuing")
+
+	m, err := migrate.NewWithInstance("file", fSrc, "postgres", instance)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
