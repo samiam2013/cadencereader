@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,7 +15,24 @@ import (
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("hello world\n"))
+	fh, err := os.Open("/views/index.html")
+	if err != nil {
+		slog.Error("Failed to open index html view", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	b, err := io.ReadAll(fh)
+	if err != nil {
+		slog.Error("Failed to read index view", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(b)
+	if err != nil {
+		slog.Error("Failed to write index view", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func healthCheck(db *sql.DB) http.HandlerFunc {
@@ -81,13 +99,11 @@ func OpenMigration(db *sql.DB) (*migrate.Migrate, error) {
 		return nil, err
 	}
 
-	slog.Info("trying to opent migrations")
 	// TODO: this path is for the docker continer?
 	fSrc, err := (&file.File{}).Open("/migrations")
 	if err != nil {
 		return nil, err
 	}
-	slog.Info("opened migrations, continuing")
 
 	m, err := migrate.NewWithInstance("file", fSrc, "postgres", instance)
 	if err != nil {

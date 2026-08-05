@@ -12,6 +12,7 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /app/app .
 COPY migrations /migrations
+COPY views /views
 EXPOSE 8080
 ENTRYPOINT ["./app"]
 
