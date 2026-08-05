@@ -28,8 +28,8 @@ spec:
             httpGet:
               path: /health
               port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: 15
+            periodSeconds: 600
           # readinessProbe:
           #   httpGet:
           #     path: /ready
