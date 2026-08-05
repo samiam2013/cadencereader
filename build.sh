@@ -4,7 +4,14 @@ set -e
 HASH_FILE=".last-build-hash"
 
 # Compute a hash of all .go files + go.mod/go.sum
-CURRENT_HASH=$(find . -name '*.go' -o -name 'go.mod' -o -name 'go.sum' -name '*.sql' \
+CURRENT_HASH=$(\
+    find . \
+      -name '*.go' -o \
+      -name 'go.mod' -o \
+      -name 'go.sum' -o \
+      -name '*.sql' -o \
+      -name '*.html' -o \
+      -name '*.gohtml' \
   | sort \
   | xargs sha256sum \
   | sha256sum \
