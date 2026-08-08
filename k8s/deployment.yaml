@@ -41,3 +41,10 @@ spec:
               secretKeyRef:
                 name: example-db-app
                 key: uri
+          - name: MIGRATION_FOLDER
+            value: "/migrations"
+          - name: APP_ENV
+            value: "prod"
+          - name: VIEW_FOLDER
+            value: "/views"
+

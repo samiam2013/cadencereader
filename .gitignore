@@ -37,3 +37,6 @@ cadencereader
 # this is just to save wait times if the docker image doesn't need rebuilt
 # it's part of ./build.sh
 .last-build-hash
+
+# don't save the env var file (used to make local development without docker possible)
+.env
