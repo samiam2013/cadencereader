@@ -64,7 +64,6 @@ func main() {
 		slog.Error("Failed to open database connection", "error", err)
 		os.Exit(1)
 	}
-	defer func() { _ = db.Close() }()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthCheck(db))
