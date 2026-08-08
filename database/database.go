@@ -40,7 +40,6 @@ func openMigration(db *sql.DB) (*migrate.Migrate, error) {
 		return nil, err
 	}
 
-	// TODO: this path is for the docker continer?
 	fSrc, err := (&file.File{}).Open(os.Getenv("MIGRATION_FOLDER"))
 	if err != nil {
 		return nil, err
