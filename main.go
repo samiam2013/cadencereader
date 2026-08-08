@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/samiam2013/cadencereader/config"
-	"github.com/samiam2013/cadencereader/db"
+	"github.com/samiam2013/cadencereader/database"
 )
 
 func index(cfg config.Config) http.HandlerFunc {
@@ -54,7 +54,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := db.Open(cfg.DatabaseURL)
+	db, err := database.Open(cfg.DatabaseURL)
 	if err != nil {
 		slog.Error("Failed to open database connection", "error", err)
 		os.Exit(1)
@@ -66,7 +66,7 @@ func main() {
 	http.HandleFunc("/", index(cfg))
 
 	slog.Info("server starting")
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		slog.Error("HTTP server exit", "error", err)
 		os.Exit(1)
 	}
