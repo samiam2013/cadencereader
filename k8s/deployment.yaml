@@ -36,6 +36,10 @@ spec:
           #     port: 80
           #   initialDelaySeconds: 3
           env:
+          - name: APP_ENV
+            value: "prod"
+          - name: HTTP_PORT
+            value: "8080"
           - name: DATABASE_URL
             valueFrom:
               secretKeyRef:
@@ -43,8 +47,7 @@ spec:
                 key: uri
           - name: MIGRATION_FOLDER
             value: "/migrations"
-          - name: APP_ENV
-            value: "prod"
           - name: VIEW_FOLDER
             value: "/views"
+
 

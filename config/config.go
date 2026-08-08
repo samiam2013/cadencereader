@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -18,6 +19,7 @@ const (
 
 type Config struct {
 	AppEnv          AppEnvironment
+	HTTPport        uint16
 	DatabaseURL     *url.URL
 	MigrationFolder string
 	ViewFolder      string
@@ -45,6 +47,13 @@ func Load() (Config, error) {
 		os.Exit(1)
 	}
 
+	hp := getEnv("HTTP_PORT")
+	httpPort, err := strconv.ParseUint(hp, 10, 16)
+	if err != nil {
+		slog.Error("Failed to parse port number", "error", err)
+		os.Exit(1)
+	}
+
 	dbu := getEnv("DATABASE_URL")
 	dbURL, err := url.Parse(dbu)
 	if err != nil {
@@ -56,6 +65,7 @@ func Load() (Config, error) {
 
 	return Config{
 		AppEnv:          appEnv,
+		HTTPport:        uint16(httpPort),
 		DatabaseURL:     dbURL,
 		MigrationFolder: migFold,
 		ViewFolder:      viewFold,
