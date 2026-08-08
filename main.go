@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/samiam2013/cadencereader/config"
 	"github.com/samiam2013/cadencereader/database"
@@ -61,13 +66,43 @@ func main() {
 	}
 	defer func() { _ = db.Close() }()
 
-	http.HandleFunc("/health", healthCheck(db))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", healthCheck(db))
+	mux.HandleFunc("/", index(cfg))
 
-	http.HandleFunc("/", index(cfg))
+	intrC := make(chan os.Signal, 1)
+	signal.Notify(intrC, syscall.SIGINT, syscall.SIGTERM)
+
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.HTTPport),
+		Handler:      mux,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	go func() {
+		<-intrC
+		slog.Warn("received interrupt, shutting down gracefully")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+
+		if err := srv.Shutdown(ctx); err != nil {
+			slog.Error("graceful shutdown failed", "error", err)
+		}
+	}()
 
 	slog.Info("server starting")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		slog.Error("HTTP server exit", "error", err)
 		os.Exit(1)
 	}
+
+	// srv.Shutdown() has returned (or timed out) by this point — safe to close DB now
+	if err := db.Close(); err != nil {
+		slog.Error("failed to close database", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("shutdown complete")
 }
