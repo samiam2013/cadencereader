@@ -8,7 +8,7 @@ fi
 
 echo "compilation time:";
 TIMEFORMAT=%R;
-time go build .. ;
+time go build -o cadencereader ../apps/web/main  ;
 if [ $? -ne 0 ]; then 
     echo "build failed, check error above";
     exit 1;
@@ -17,6 +17,8 @@ fi
 set -a
 source .env
 set +a
+
+export DATABASE_URL=postgres://$DB_USER:$DB_PASS@localhost:$DB_PORT/$DB_NAME?sslmode=disable
 
 echo "starting broswer";
 (sleep 1; open http://localhost:8080) &

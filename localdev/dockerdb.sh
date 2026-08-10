@@ -12,11 +12,27 @@ while (! docker stats --no-stream ); do
 done
 fi
 
-docker run -d --name devdb \
-  -e POSTGRES_PASSWORD=dev \
-  -e POSTGRES_DB=cadencereader \
+set -a
+source .env
+set +a
+
+db_container_name="$DB_NAME-container"
+db_volume_name="$DB_NAME-data"
+
+docker stop $db_container_name
+docker rm $db_container_name
+docker volume rm $db_volume_name
+
+docker run -d --name $db_container_name \
+  -e POSTGRES_PASSWORD=$DB_PASS \
+  -e POSTGRES_DB=$DB_NAME \
   -p 5432:5432 \
-  -v devdb-data:/var/lib/postgresql/data \
+  -v $db_volume_name:/var/lib/postgresql/data \
   postgres:16
 
-migrate -path ../migrations -database "postgres://postgres:dev@localhost:5432/cadencereader?sslmode=disable" up
+until docker exec $db_container_name psql -U $DB_USER -d $DB_NAME -c "SELECT 1;" > /dev/null 2>&1; do
+    sleep 0.1
+done
+echo "Postgres is ready!"
+
+migrate -path ../database/migrations -database "postgres://$DB_USER:$DB_PASS@localhost:5432/$DB_NAME?sslmode=disable" up
