@@ -35,3 +35,26 @@ the Cloud Native Postgres k8s operator which handles persistent data inside the 
 `go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest`
 
 and I may be adding [flux for gitops](https://fluxcd.io/) so that this repo's main branch, which is protected, automatically redeploys to the cluster when a change is merged
+
+## How to Run
+
+### Local Development
+Because I'm sick of waiting on docker to take ~30 seconds on any platform to rebuild the container, I set up `/localdev` with a script that starts a postgres container `/dockerdb.sh` and a sample env file so that you can source environment variables with a run script and get near-instant startup
+
+You don't need k3s, CNPG, flux or golang-migrate to get started locally.
+
+on MacOS, because that's the only place I've worked on development of this,
+```bash
+cd localdev/
+cp sample.env .env
+./run.sh
+```
+should be all it takes to get started (but no promises)
+
+### k3s cluster
+
+once all the dependencies are set up and working
+```bash
+./build.sh
+```
+in the main directory should do the trick. This script keeps track of a hash of the files that could change necessitating a rebuild of the docker continer(s) so you can modify the k8s manifests without waiting on a full rebuild to test those changes
