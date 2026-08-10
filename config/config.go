@@ -12,9 +12,9 @@ import (
 type AppEnvironment uint8
 
 const (
-	_                    = iota
-	local AppEnvironment = iota
-	prod  AppEnvironment = iota
+	_ AppEnvironment = iota
+	local
+	prod
 )
 
 type Config struct {
@@ -70,5 +70,4 @@ func Load() (Config, error) {
 		MigrationFolder: migFold,
 		ViewFolder:      viewFold,
 	}, nil
-
 }
