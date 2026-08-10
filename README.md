@@ -10,7 +10,9 @@ The platform that runs the kubernetes manifests, a lightweight version of 'k8s' 
 [instructions here](https://docs.k3s.io/quick-start)
 
 and I had to add this line to my ./bashrc 
-`export KUBECONFIG=$HOME/.kube/config`
+```bash
+export KUBECONFIG=$HOME/.kube/config
+```
 
 and I had to fight a little to get kubectl working because when you do the k3s quick install `kubectl` is just a link to the k3s binary or something idk really
 
@@ -63,3 +65,4 @@ once all the dependencies are set up and working
 ./build.sh
 ```
 in the main directory should do the trick. This script keeps track of a hash of the files that could change necessitating a rebuild of the docker continer(s) so you can modify the k8s manifests without waiting on a full rebuild to test those changes
+
