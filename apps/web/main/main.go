@@ -16,40 +16,6 @@ import (
 	"github.com/samiam2013/cadencereader/database"
 )
 
-func index(cfg config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fh, err := os.Open(cfg.ViewFolder + "/index.html")
-		if err != nil {
-			slog.Error("Failed to open index html view", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		b, err := io.ReadAll(fh)
-		if err != nil {
-			slog.Error("Failed to read index view", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		_, err = w.Write(b)
-		if err != nil {
-			slog.Error("Failed to write index view", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func healthCheck(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := db.Ping(); err != nil {
-			slog.Error("Database ping failed", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	}
-}
-
 func main() {
 	slog.Info("CadenceReader Starting")
 
@@ -66,8 +32,12 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", healthCheck(db))
-	mux.HandleFunc("/", index(cfg))
+	mux.HandleFunc("GET /health", healthCheck(db))
+	mux.HandleFunc("GET /",
+		static(fmt.Sprintf("%s/%s", cfg.ViewFolder, "index.html")))
+	mux.HandleFunc("GET /add-blog",
+		static(fmt.Sprintf("%s/%s", cfg.ViewFolder, "add-blog.html")))
+	mux.HandleFunc("POST /add-blog", addBlog(db))
 
 	intrC := make(chan os.Signal, 1)
 	signal.Notify(intrC, syscall.SIGINT, syscall.SIGTERM)
@@ -104,4 +74,38 @@ func main() {
 		os.Exit(1)
 	}
 	slog.Info("shutdown complete")
+}
+
+func static(path string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fh, err := os.Open(path)
+		if err != nil {
+			slog.Error("Failed to open index html view", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		b, err := io.ReadAll(fh)
+		if err != nil {
+			slog.Error("Failed to read index view", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, err = w.Write(b)
+		if err != nil {
+			slog.Error("Failed to write index view", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func healthCheck(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Ping(); err != nil {
+			slog.Error("Database ping failed", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
 }
