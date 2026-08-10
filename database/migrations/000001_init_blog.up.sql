@@ -5,3 +5,4 @@ CREATE TABLE blog (
     rss_feed TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
