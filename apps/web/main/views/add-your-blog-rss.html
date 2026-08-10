@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cadence Reader</title>
+</head>
+
+<body>
+    <h2>Cadence Reader</h2>
+    <p>
+        Howdy! Thanks for coming by. <br />
+        To add your blog to this site there's just two steps: 
+        <ol>
+            <li>
+                Create a new blog post named "Permission for CadenceReader Syndication"
+            </li>
+            <li>
+                Fill out the form below with the title and content description and RSS feed link below and submit!
+            </li>
+        </ol>
+        You're welcome to put whatever you like in the body of your blog post<br />
+        <form name="blog-submission" type="POST" action="/add-blog">
+            <label>Blog Title</label>
+                <input type="text" name="title"/>
+            <br />
+            <label>Content description</label>
+                <input type="text" name="description" placeholder="What is your blog content (normally) about"/>
+            <br />
+            <label>RSS Feed URL</label>
+                <input type="text" name="rss_url"/>
+            <br />
+            <input type="submit" value="Add My Blog!" />
+        </form>
+    </p>
+</body>
+
+</html>
