@@ -47,9 +47,14 @@ on MacOS, because that's the only place I've worked on development of this,
 ```bash
 cd localdev/
 cp sample.env .env
+./dockerdb.sh
+```
+should be all it takes to get bootstrapped (but no promises), 
+then
+```bash
 ./run.sh
 ```
-should be all it takes to get started (but no promises)
+should open the app in your broswer
 
 ### k3s cluster
 
