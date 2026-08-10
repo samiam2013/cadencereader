@@ -17,7 +17,7 @@ spec:
       containers:
         - name: cadencereader
           image: cadencereader:latest
-          imagePullPolicy: IfNotPresent   # important — otherwise k8s tries to pull from a registry
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           resources:
@@ -30,11 +30,6 @@ spec:
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 600
-          # readinessProbe:
-          #   httpGet:
-          #     path: /ready
-          #     port: 80
-          #   initialDelaySeconds: 3
           env:
           - name: APP_ENV
             value: "prod"
@@ -49,5 +44,3 @@ spec:
             value: "/migrations"
           - name: VIEW_FOLDER
             value: "/views"
-
-
