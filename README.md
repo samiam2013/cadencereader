@@ -9,12 +9,11 @@ The platform that runs the kubernetes manifests, a lightweight version of 'k8s' 
 
 [instructions here](https://docs.k3s.io/quick-start)
 
-and I had to add this line to my ./bashrc 
+and I had to copy the kube config to my home directory add this line to my ./bashrc 
 ```bash
 export KUBECONFIG=$HOME/.kube/config
 ```
-
-and I had to fight a little to get kubectl working because when you do the k3s quick install `kubectl` is just a link to the k3s binary or something idk really
+I'll admit I had to fight a little to get kubectl working because when you do the k3s quick install `kubectl` is just a link to the k3s binary or something idk really
 
 ### Docker
 because you have to build the containers for k3s to run
