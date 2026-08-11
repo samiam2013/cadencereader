@@ -24,12 +24,12 @@ spec:
             limits:
               memory: "200Mi"
               cpu: "200m"
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8080
-          #   initialDelaySeconds: 15
-          #   periodSeconds: 600
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 600
           env:
           - name: APP_ENV
             value: "prod"

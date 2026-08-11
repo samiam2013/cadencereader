@@ -25,12 +25,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// db, err := database.Open(cfg.DatabaseURL)
-	// if err != nil {
-	// 	slog.Error("Failed to open database connection", "error", err)
-	// 	os.Exit(1)
-	// }
-
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, cfg.DatabaseURL.String())
 	if err != nil {
@@ -40,7 +34,7 @@ func main() {
 	db := database.New(conn)
 
 	mux := http.NewServeMux()
-	// TODO: re-add health check using conn.Ping()
+	mux.HandleFunc("GET /health", healthCheck(conn))
 	mux.HandleFunc("GET /",
 		static(fmt.Sprintf("%s/%s", cfg.ViewFolder, "index.html")))
 	mux.HandleFunc("GET /add-blog",
@@ -98,5 +92,16 @@ func static(path string) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+	}
+}
+
+func healthCheck(db *pgx.Conn) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Ping(context.Background()); err != nil {
+			slog.Error("Database ping failed", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	}
 }
