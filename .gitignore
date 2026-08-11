@@ -31,8 +31,9 @@ go.work.sum
 # .idea/
 # .vscode/
 
-# don't version the binary
+# don't version the binaries
 cadencereader
+rssimport
 
 # this is just to save wait times if the docker image doesn't need rebuilt
 # it's part of ./build.sh

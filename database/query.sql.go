@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 )
 
 const createBlog = `-- name: CreateBlog :one
@@ -35,4 +36,95 @@ func (q *Queries) CreateBlog(ctx context.Context, arg CreateBlogParams) (Blog, e
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const createBlogPost = `-- name: CreateBlogPost :one
+INSERT INTO blog_post (
+  blog_id, title, content
+) VALUES (
+  $1, $2, $3
+)
+RETURNING id, blog_id, title, content, created_at
+`
+
+type CreateBlogPostParams struct {
+	BlogID  sql.NullInt32
+	Title   string
+	Content string
+}
+
+func (q *Queries) CreateBlogPost(ctx context.Context, arg CreateBlogPostParams) (BlogPost, error) {
+	row := q.db.QueryRow(ctx, createBlogPost, arg.BlogID, arg.Title, arg.Content)
+	var i BlogPost
+	err := row.Scan(
+		&i.ID,
+		&i.BlogID,
+		&i.Title,
+		&i.Content,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const listBlogPosts = `-- name: ListBlogPosts :many
+SELECT id, blog_id, title, content, created_at FROM blog_post
+WHERE blog_id = $1
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListBlogPosts(ctx context.Context, blogID sql.NullInt32) ([]BlogPost, error) {
+	rows, err := q.db.Query(ctx, listBlogPosts, blogID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BlogPost
+	for rows.Next() {
+		var i BlogPost
+		if err := rows.Scan(
+			&i.ID,
+			&i.BlogID,
+			&i.Title,
+			&i.Content,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listBlogs = `-- name: ListBlogs :many
+SELECT id, title, content_description, rss_feed, created_at FROM blog
+ORDER BY created_at
+`
+
+func (q *Queries) ListBlogs(ctx context.Context) ([]Blog, error) {
+	rows, err := q.db.Query(ctx, listBlogs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Blog
+	for rows.Next() {
+		var i Blog
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.ContentDescription,
+			&i.RssFeed,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

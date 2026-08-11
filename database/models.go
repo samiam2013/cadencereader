@@ -5,6 +5,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -14,4 +15,12 @@ type Blog struct {
 	ContentDescription string
 	RssFeed            string
 	CreatedAt          time.Time
+}
+
+type BlogPost struct {
+	ID        int32
+	BlogID    sql.NullInt32
+	Title     string
+	Content   string
+	CreatedAt time.Time
 }
