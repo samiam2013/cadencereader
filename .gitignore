@@ -33,6 +33,8 @@ go.work.sum
 
 # don't version the binaries
 cadencereader
+crbin
+rssbin
 
 
 # this is just to save wait times if the docker image doesn't need rebuilt
