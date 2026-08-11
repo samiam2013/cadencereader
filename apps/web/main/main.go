@@ -40,6 +40,7 @@ func main() {
 	db := database.New(conn)
 
 	mux := http.NewServeMux()
+	// TODO: re-add health check using conn.Ping()
 	mux.HandleFunc("GET /",
 		static(fmt.Sprintf("%s/%s", cfg.ViewFolder, "index.html")))
 	mux.HandleFunc("GET /add-blog",
