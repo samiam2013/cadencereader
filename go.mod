@@ -1,10 +1,11 @@
-module github.com/samiam2013/cadencereader
+module github.com/somethingsoftware/cadencereader
 
 go 1.26.5
 
 require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
+	github.com/samiam2013/cadencereader v0.0.0-20260811144940-571c2a59753b
 )
 
 require (

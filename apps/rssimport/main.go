@@ -12,10 +12,9 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/jackc/pgx/v4"
 	"github.com/mmcdole/gofeed"
-	"github.com/samiam2013/cadencereader/config"
-	"github.com/samiam2013/cadencereader/database"
+	"github.com/somethingsoftware/cadencereader/config"
+	"github.com/somethingsoftware/cadencereader/database"
 )
 
 const AuthorizationTitle = "Permission for CadenceReader Syndication"
@@ -29,12 +28,11 @@ func main() {
 	}
 
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, cfg.DatabaseURL.String())
+	_, db, err := database.Open(ctx, cfg.DatabaseURL.String())
 	if err != nil {
-		slog.Error("Failed to connect via pgx", "error", err)
+		slog.Error("Failed to open database", "error", err)
 		os.Exit(1)
 	}
-	db := database.New(conn)
 
 	blogs, err := db.ListBlogs(ctx)
 	if err != nil {
@@ -48,7 +46,7 @@ func main() {
 			slog.Error("Failed to parse blog rss feed", "error", err)
 			continue
 		}
-		slog.Info("feed parsed", "title", feed.Title, "type", feed.FeedType, "len", feed.Len())
+		slog.Info("feed parsed", "len", feed.Len())
 
 		// get existing blog post titles
 		existingPostTitles := []string{}
@@ -64,7 +62,7 @@ func main() {
 		authorized := false
 		links := make(map[string]string)
 		for _, feedItem := range feed.Items {
-			slog.Info("feed item", "title", feedItem.Title, "link", feedItem.Link)
+			// slog.Info("feed item", "title", feedItem.Title, "link", feedItem.Link)
 			fiTitle := strings.ToLower(strings.TrimSpace(feedItem.Title))
 			if fiTitle == strings.ToLower(AuthorizationTitle) {
 				authorized = true
@@ -95,7 +93,8 @@ func main() {
 					slog.Error("Failed creating new blog post", "error", err)
 					continue
 				}
-				slog.Info("Created new blog post", "post", newPost)
+				_ = newPost
+				// slog.Info("Created new blog post", "post", newPost)
 			}
 		}
 	}

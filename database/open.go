@@ -1,37 +1,41 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	mpgx "github.com/golang-migrate/migrate/v4/database/pgx"
 	"github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v4"
 )
 
-func Open(dbURL *url.URL) (*sql.DB, error) {
-	db, err := sql.Open("postgres", dbURL.String())
+func Open(ctx context.Context, dbURL string) (*pgx.Conn, *Queries, error) {
+	conn, err := pgx.Connect(ctx, dbURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open postgres connection: %w", err)
+		return nil, nil, fmt.Errorf("failed to connect via pgx: %w", err)
 	}
+	queries := New(conn)
 
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database after opening: %w", err)
+	db, err := sql.Open("pgx", dbURL)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open sql/db for migration: %w", err)
 	}
+	defer db.Close()
 
 	m, err := openMigration(db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open migrations: %w", err)
+		return nil, nil, fmt.Errorf("failed to open migrations: %w", err)
 	}
 	if err := m.Up(); err != nil {
 		if !errors.Is(err, migrate.ErrNoChange) {
-			return nil, fmt.Errorf("failed to run migration: %w", err)
+			return nil, nil, fmt.Errorf("failed to run migration: %w", err)
 		}
 	}
-	return db, nil
+	return conn, queries, nil
 }
 
 func openMigration(db *sql.DB) (*migrate.Migrate, error) {
