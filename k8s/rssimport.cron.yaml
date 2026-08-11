@@ -3,15 +3,15 @@ kind: CronJob
 metadata:
   name: rssimport
 spec:
-  schedule: "* * * * 15"
+  schedule: "15 * * * *"
   jobTemplate:
     spec:
       template:
         spec:
+          restartPolicy: OnFailure
           containers:
             - name: rssimport
               image: rssimport:latest
-              restartPolicy: OnFailure
               imagePullPolicy: Never
               resources:
                 limits:
