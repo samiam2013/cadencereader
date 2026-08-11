@@ -9,4 +9,4 @@ docker save rssimport:latest | sudo k3s ctr images import -
 
 kubectl apply -f k8s/
 kubectl rollout restart deployment cadencereader
-kubectl rollout restart cron rssimport
+kubectl create job immediate-rssimport --from=cronjob/rssimport

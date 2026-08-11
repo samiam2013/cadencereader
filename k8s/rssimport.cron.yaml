@@ -24,6 +24,8 @@ spec:
                 value: "8080"
               - name: MIGRATION_FOLDER
                 value: "/migrations"
+              - name: VIEW_FOLDER
+                value: "/views"
               - name: DATABASE_URL
                 valueFrom:
                   secretKeyRef:
