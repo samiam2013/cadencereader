@@ -35,6 +35,13 @@ the Cloud Native Postgres k8s operator which handles persistent data inside the 
 [this is a schema migration tool](https://github.com/golang-migrate/migrate) you might not have to use directly, but it's good to have it for troubleshooting, it's what main webapp uses to build the pg tables and stuff
 `go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest`
 
+### SQLC
+[A better ORM than ORM](https://github.com/sqlc-dev/sqlc)
+```bash
+go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+```
+
+### Flux CD
 and I may be adding [flux for gitops](https://fluxcd.io/) so that this repo's main branch, which is protected, automatically redeploys to the cluster when a change is merged
 
 ## How to Run

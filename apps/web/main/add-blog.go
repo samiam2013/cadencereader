@@ -1,14 +1,16 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/samiam2013/cadencereader/database"
 )
 
-func addBlog(db *sql.DB) http.HandlerFunc {
+func addBlog(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: is this necessary?
 		if err := r.ParseForm(); err != nil {
@@ -39,20 +41,19 @@ func addBlog(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if _, err := db.Exec(
-			`INSERT INTO blog (title, content_description, rss_feed) 
-			VALUES ($1, $2, $3)`,
-			title, description, rssURL.String(),
-		); err != nil {
-			if strings.Contains(err.Error(), "violates unique") {
-				http.Error(w, "blog title or rss feed not unique, already added?", http.StatusBadRequest)
-				slog.Error("Failed uniqueness check", "error", err)
-				return
-			}
+		ctx := context.Background()
+		blog, err := db.CreateBlog(ctx,
+			database.CreateBlogParams{
+				Title:              title,
+				ContentDescription: description,
+				RssFeed:            rssURL.String(),
+			})
+		if err != nil {
 			http.Error(w, "failed", http.StatusInternalServerError)
-			slog.Error("Failed inserting blog", "error", err)
+			slog.Error("Failed to create blog row", "error", err)
 			return
 		}
+		slog.Info("Created new blog row", "blog", blog)
 
 		// TODO: redirect to home page with success message and prompt
 		// user to check back later (mention import cycle time)

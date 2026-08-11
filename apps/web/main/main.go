@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"io"
 	"log/slog"
@@ -12,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/samiam2013/cadencereader/config"
 	"github.com/samiam2013/cadencereader/database"
 )
@@ -25,14 +25,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := database.Open(cfg.DatabaseURL)
+	// db, err := database.Open(cfg.DatabaseURL)
+	// if err != nil {
+	// 	slog.Error("Failed to open database connection", "error", err)
+	// 	os.Exit(1)
+	// }
+
+	ctx := context.Background()
+	conn, err := pgx.Connect(ctx, cfg.DatabaseURL.String())
 	if err != nil {
-		slog.Error("Failed to open database connection", "error", err)
+		slog.Error("Failed to connect via pgx", "error", err)
 		os.Exit(1)
 	}
+	db := database.New(conn)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", healthCheck(db))
 	mux.HandleFunc("GET /",
 		static(fmt.Sprintf("%s/%s", cfg.ViewFolder, "index.html")))
 	mux.HandleFunc("GET /add-blog",
@@ -67,12 +74,6 @@ func main() {
 		slog.Error("HTTP server exit", "error", err)
 		os.Exit(1)
 	}
-
-	// srv.Shutdown() has returned (or timed out) by this point — safe to close DB now
-	if err := db.Close(); err != nil {
-		slog.Error("failed to close database", "error", err)
-		os.Exit(1)
-	}
 	slog.Info("shutdown complete")
 }
 
@@ -96,16 +97,5 @@ func static(path string) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-	}
-}
-
-func healthCheck(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := db.Ping(); err != nil {
-			slog.Error("Database ping failed", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
 	}
 }
