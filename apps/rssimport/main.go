@@ -28,7 +28,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	_, db, err := database.Open(ctx, cfg.DatabaseURL.String())
+	_, db, err := database.Open(ctx, cfg)
 	if err != nil {
 		slog.Error("Failed to open database", "error", err)
 		os.Exit(1)

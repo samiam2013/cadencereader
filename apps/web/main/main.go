@@ -19,27 +19,26 @@ import (
 func main() {
 	slog.Info("CadenceReader Starting")
 
-	cfg, err := config.Load()
+	cfg, err := config.Load("VIEW_FOLDER")
 	if err != nil {
 		slog.Error("Failed to load configuration", "error", err)
 		os.Exit(1)
 	}
 
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, cfg.DatabaseURL.String())
+	conn, queries, err := database.Open(ctx, cfg)
 	if err != nil {
-		slog.Error("Failed to connect via pgx", "error", err)
+		slog.Error("Failed to open database", "error", err)
 		os.Exit(1)
 	}
-	db := database.New(conn)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthCheck(conn))
 	mux.HandleFunc("GET /",
-		static(fmt.Sprintf("%s/%s", cfg.ViewFolder, "index.html")))
+		static(fmt.Sprintf("%s/%s", cfg.Extra["VIEW_FOLDER"], "index.html")))
 	mux.HandleFunc("GET /add-blog",
-		static(fmt.Sprintf("%s/%s", cfg.ViewFolder, "add-blog.html")))
-	mux.HandleFunc("POST /add-blog", addBlog(db))
+		static(fmt.Sprintf("%s/%s", cfg.Extra["VIEW_FOLDER"], "add-blog.html")))
+	mux.HandleFunc("POST /add-blog", addBlog(queries))
 
 	intrC := make(chan os.Signal, 1)
 	signal.Notify(intrC, syscall.SIGINT, syscall.SIGTERM)

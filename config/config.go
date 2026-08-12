@@ -22,10 +22,10 @@ type Config struct {
 	HTTPport        uint16
 	DatabaseURL     *url.URL
 	MigrationFolder string
-	ViewFolder      string
+	Extra           map[string]string
 }
 
-func Load() (Config, error) {
+func Load(extraEnv ...string) (Config, error) {
 	getEnv := func(key string) string {
 		val := os.Getenv(key)
 		if len(strings.TrimSpace(val)) == 0 {
@@ -60,14 +60,19 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("failed parsing database url: %w", err)
 	}
 
-	migFold := getEnv("MIGRATION_FOLDER")
-	viewFold := getEnv("VIEW_FOLDER")
+	migrationFolder := getEnv("MIGRATION_FOLDER")
+
+	extraEnvMap := make(map[string]string)
+	for _, key := range extraEnv {
+		value := getEnv(key)
+		extraEnvMap[key] = value
+	}
 
 	return Config{
 		AppEnv:          appEnv,
 		HTTPport:        uint16(httpPort),
 		DatabaseURL:     dbURL,
-		MigrationFolder: migFold,
-		ViewFolder:      viewFold,
+		MigrationFolder: migrationFolder,
+		Extra:           extraEnvMap,
 	}, nil
 }
