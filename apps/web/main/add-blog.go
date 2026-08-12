@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/samiam2013/cadencereader/database"
+	"github.com/somethingsoftware/cadencereader/database"
 )
 
 func addBlog(db *database.Queries) http.HandlerFunc {

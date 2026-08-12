@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/samiam2013/cadencereader/config"
-	"github.com/samiam2013/cadencereader/database"
+	"github.com/somethingsoftware/cadencereader/config"
+	"github.com/somethingsoftware/cadencereader/database"
 )
 
 func main() {
