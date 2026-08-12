@@ -1,0 +1,15 @@
+{{- define "env.shared" -}}
+- name: APP_ENV
+value: "prod"
+- name: HTTP_PORT
+value: "8080"
+- name: DATABASE_URL
+valueFrom:
+    secretKeyRef:
+    name: example-db-app
+    key: uri
+- name: MIGRATION_FOLDER
+value: "/migrations"
+- name: VIEW_FOLDER
+value: "/views"
+{{- end -}}
