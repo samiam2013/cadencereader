@@ -20,5 +20,14 @@ RETURNING *;
 
 -- name: ListBlogPosts :many
 SELECT * FROM blog_post
+ORDER BY created_at DESC
+LIMIT $1;
+
+-- name: GetBlogPost :one
+SELECT * FROM blog_post
+WHERE id = $1;
+
+-- name: ListPostsByBlogID :many
+SELECT * FROM blog_post
 WHERE blog_id = $1
 ORDER BY created_at DESC;

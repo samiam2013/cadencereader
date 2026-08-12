@@ -50,7 +50,7 @@ func main() {
 
 		// get existing blog post titles
 		existingPostTitles := []string{}
-		posts, err := db.ListBlogPosts(ctx, pgtype.Int4{Valid: true, Int32: blog.ID})
+		posts, err := db.ListPostsByBlogID(ctx, pgtype.Int4{Valid: true, Int32: blog.ID})
 		if err != nil {
 			slog.Error("Failed to list existing blog posts", "error", err)
 			continue

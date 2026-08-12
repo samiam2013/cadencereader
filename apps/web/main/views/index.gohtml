@@ -24,6 +24,11 @@
             at a time.
     </ol>
     <br />
+    <ul>
+    {{range .}}
+        <li><a href="/post/{{.ID}}">{{.Title}}</a></li>
+    {{end}}
+    </ul>
     <a href="/add-blog">Add your Blog's RSS feed here</a><br />
     <a href="https://github.com/somethingsoftware/cadencereader">This site is open source! check out the code here</a>
     </p>

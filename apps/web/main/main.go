@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"text/template"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -34,8 +36,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthCheck(conn))
-	mux.HandleFunc("GET /",
-		static(fmt.Sprintf("%s/%s", cfg.Extra["VIEW_FOLDER"], "index.html")))
+	mux.HandleFunc("GET /", index(ctx, cfg, queries))
+	mux.HandleFunc("GET /post/{id}", post(ctx, cfg, queries))
 	mux.HandleFunc("GET /add-blog",
 		static(fmt.Sprintf("%s/%s", cfg.Extra["VIEW_FOLDER"], "add-blog.html")))
 	mux.HandleFunc("POST /add-blog", addBlog(queries))
@@ -69,6 +71,47 @@ func main() {
 		os.Exit(1)
 	}
 	slog.Info("shutdown complete")
+}
+
+func index(ctx context.Context, cfg config.Config, queries *database.Queries) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		posts, err := queries.ListBlogPosts(ctx, 20)
+		if err != nil {
+			http.Error(w, "failed to query database", http.StatusInternalServerError)
+			slog.Error("Failed to query blog posts", "error", err)
+			return
+		}
+		tmpl := template.Must(template.ParseFiles(cfg.Extra["VIEW_FOLDER"] + "/index.gohtml"))
+		if err := tmpl.Execute(w, posts); err != nil {
+			http.Error(w, "failed to render", http.StatusInternalServerError)
+			slog.Error("Failed to execute index template with posts", "error", err)
+			return
+		}
+	}
+}
+
+func post(ctx context.Context, cfg config.Config, queries *database.Queries) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		postIDstr := r.PathValue("id")
+		postID, err := strconv.Atoi(postIDstr)
+		if err != nil {
+			http.Error(w, "failed to parse post id in path", http.StatusInternalServerError)
+			slog.Error("Failed to parse post id", "error", err)
+			return
+		}
+		post, err := queries.GetBlogPost(ctx, int32(postID))
+		if err != nil {
+			http.Error(w, "failed to find post", http.StatusInternalServerError)
+			slog.Error("Failed to get blog post", "error", err)
+			return
+		}
+		tmpl := template.Must(template.ParseFiles(cfg.Extra["VIEW_FOLDER"] + "/post.gohtml"))
+		if err := tmpl.Execute(w, post); err != nil {
+			http.Error(w, "failed to render", http.StatusInternalServerError)
+			slog.Error("Failed to execute template with post data", "error", err)
+			return
+		}
+	}
 }
 
 func static(path string) http.HandlerFunc {

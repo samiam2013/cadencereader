@@ -67,14 +67,32 @@ func (q *Queries) CreateBlogPost(ctx context.Context, arg CreateBlogPostParams) 
 	return i, err
 }
 
-const listBlogPosts = `-- name: ListBlogPosts :many
+const getBlogPost = `-- name: GetBlogPost :one
 SELECT id, blog_id, title, content, created_at FROM blog_post
-WHERE blog_id = $1
-ORDER BY created_at DESC
+WHERE id = $1
 `
 
-func (q *Queries) ListBlogPosts(ctx context.Context, blogID pgtype.Int4) ([]BlogPost, error) {
-	rows, err := q.db.Query(ctx, listBlogPosts, blogID)
+func (q *Queries) GetBlogPost(ctx context.Context, id int32) (BlogPost, error) {
+	row := q.db.QueryRow(ctx, getBlogPost, id)
+	var i BlogPost
+	err := row.Scan(
+		&i.ID,
+		&i.BlogID,
+		&i.Title,
+		&i.Content,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const listBlogPosts = `-- name: ListBlogPosts :many
+SELECT id, blog_id, title, content, created_at FROM blog_post
+ORDER BY created_at DESC
+LIMIT $1
+`
+
+func (q *Queries) ListBlogPosts(ctx context.Context, limit int32) ([]BlogPost, error) {
+	rows, err := q.db.Query(ctx, listBlogPosts, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -118,6 +136,38 @@ func (q *Queries) ListBlogs(ctx context.Context) ([]Blog, error) {
 			&i.Title,
 			&i.ContentDescription,
 			&i.RssFeed,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPostsByBlogID = `-- name: ListPostsByBlogID :many
+SELECT id, blog_id, title, content, created_at FROM blog_post
+WHERE blog_id = $1
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListPostsByBlogID(ctx context.Context, blogID pgtype.Int4) ([]BlogPost, error) {
+	rows, err := q.db.Query(ctx, listPostsByBlogID, blogID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BlogPost
+	for rows.Next() {
+		var i BlogPost
+		if err := rows.Scan(
+			&i.ID,
+			&i.BlogID,
+			&i.Title,
+			&i.Content,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
