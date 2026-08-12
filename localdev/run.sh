@@ -15,6 +15,15 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 
+echo "compiling dripper app";
+echo "compilation time:";
+TIMEFORMAT=%R;
+time go build -o dripbin ../apps/web/dripper  ;
+if [ $? -ne 0 ]; then 
+    echo "build failed, check error above";
+    exit 1;
+fi
+
 echo "compiling rssimport app";
 echo "compilation time:";
 TIMEFORMAT=%R;
@@ -35,4 +44,5 @@ echo "running rss import"
 
 echo "starting broswer";
 (sleep 1; open http://localhost:8080) &
-./crbin
+./dripbin & ./crbin && kill $!
+

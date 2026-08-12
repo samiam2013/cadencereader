@@ -35,6 +35,7 @@ go.work.sum
 cadencereader
 crbin
 rssbin
+dripbin
 
 
 # this is just to save wait times if the docker image doesn't need rebuilt
