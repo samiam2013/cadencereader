@@ -10,7 +10,7 @@
         var idx = 0;
         async function getData() {
             console.log("getData called")
-            const url = "http://localhost:8081/post/{{.ID}}/word/"+idx;
+            const url = "http://localhost:8081/post/{{.ID}}/word/" + idx;
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
@@ -20,19 +20,28 @@
                 const result = await response.text();
 
                 var div = document.getElementById('append');
-                div.innerText += result
+                div.innerText += (' ' + result)
                 idx++
             } catch (error) {
                 console.error(error.message);
             }
         }
+
+        document.body.onkeyup = function (e) {
+            if (e.key == " " ||
+                e.code == "Space" ||
+                e.keyCode == 32
+            ) {
+                getData
+            }
+        }
     </script>
     <h2>Cadence Reader</h2>
     <h4>{{.Title}}</h4>
-    <p>
-    <div id="append"></div>
     <br />
     <button onclick="getData()">get data</button>
+    <p>
+    <div id="append"></div>
     <br />
     <br />
     <a href="/add-blog">Add your Blog's RSS feed here</a><br />
