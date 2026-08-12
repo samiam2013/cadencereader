@@ -5,8 +5,7 @@
 package database
 
 import (
-	"database/sql"
-	"time"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Blog struct {
@@ -14,13 +13,13 @@ type Blog struct {
 	Title              string
 	ContentDescription string
 	RssFeed            string
-	CreatedAt          time.Time
+	CreatedAt          pgtype.Timestamptz
 }
 
 type BlogPost struct {
 	ID        int32
-	BlogID    sql.NullInt32
+	BlogID    pgtype.Int4
 	Title     string
 	Content   string
-	CreatedAt time.Time
+	CreatedAt pgtype.Timestamptz
 }

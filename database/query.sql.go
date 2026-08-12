@@ -7,7 +7,8 @@ package database
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createBlog = `-- name: CreateBlog :one
@@ -48,7 +49,7 @@ RETURNING id, blog_id, title, content, created_at
 `
 
 type CreateBlogPostParams struct {
-	BlogID  sql.NullInt32
+	BlogID  pgtype.Int4
 	Title   string
 	Content string
 }
@@ -72,7 +73,7 @@ WHERE blog_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListBlogPosts(ctx context.Context, blogID sql.NullInt32) ([]BlogPost, error) {
+func (q *Queries) ListBlogPosts(ctx context.Context, blogID pgtype.Int4) ([]BlogPost, error) {
 	rows, err := q.db.Query(ctx, listBlogPosts, blogID)
 	if err != nil {
 		return nil, err

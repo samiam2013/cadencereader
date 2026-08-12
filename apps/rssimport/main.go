@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mmcdole/gofeed"
 	"github.com/somethingsoftware/cadencereader/config"
 	"github.com/somethingsoftware/cadencereader/database"
@@ -50,7 +50,7 @@ func main() {
 
 		// get existing blog post titles
 		existingPostTitles := []string{}
-		posts, err := db.ListBlogPosts(ctx, sql.NullInt32{Valid: true, Int32: blog.ID})
+		posts, err := db.ListBlogPosts(ctx, pgtype.Int4{Valid: true, Int32: blog.ID})
 		if err != nil {
 			slog.Error("Failed to list existing blog posts", "error", err)
 			continue
@@ -85,7 +85,7 @@ func main() {
 
 				newPost, err := db.CreateBlogPost(ctx,
 					database.CreateBlogPostParams{
-						BlogID:  sql.NullInt32{Valid: true, Int32: blog.ID},
+						BlogID:  pgtype.Int4{Valid: true, Int32: blog.ID},
 						Title:   title,
 						Content: content,
 					})
