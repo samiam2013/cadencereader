@@ -41,4 +41,6 @@ spec:
                 name: example-db-app
                 key: uri
           - name: MIGRATION_FOLDER
-            value: "/migrations"
+            value: "/migrations"          
+          - name: VIEW_FOLDER
+            value: "/views"
