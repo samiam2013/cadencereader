@@ -16,3 +16,13 @@ spec:
                 name: cadencereader
                 port:
                   number: 8080
+    - host: dripper.cadencereader.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name:  dripper
+                port:
+                  number: 8081
