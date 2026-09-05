@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/somethingsoftware/cadencereader/config"
 	"github.com/somethingsoftware/cadencereader/database"
 )
@@ -28,14 +28,14 @@ func main() {
 	}
 
 	ctx := context.Background()
-	conn, queries, err := database.Open(ctx, cfg)
+	db, queries, err := database.Open(ctx, cfg)
 	if err != nil {
 		slog.Error("Failed to open database", "error", err)
 		os.Exit(1)
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", healthCheck(conn))
+	mux.HandleFunc("GET /health", healthCheck(db))
 	mux.HandleFunc("GET /post/{post_id}/{segment_type}/{index}", drip(ctx, cfg, queries))
 	intrC := make(chan os.Signal, 1)
 	signal.Notify(intrC, syscall.SIGINT, syscall.SIGTERM)
@@ -71,6 +71,7 @@ func main() {
 var segTypes = []string{"word", "sentence", "paragraph"}
 
 func drip(ctx context.Context, cfg config.Config, queries *database.Queries) http.HandlerFunc {
+	_ = cfg
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -126,9 +127,9 @@ func drip(ctx context.Context, cfg config.Config, queries *database.Queries) htt
 	}
 }
 
-func healthCheck(db *pgx.Conn) http.HandlerFunc {
+func healthCheck(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := db.Ping(context.Background()); err != nil {
+		if err := db.Ping(); err != nil {
 			slog.Error("Database ping failed", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return

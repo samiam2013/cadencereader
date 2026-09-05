@@ -7,8 +7,7 @@ package database
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
 )
 
 const createBlog = `-- name: CreateBlog :one
@@ -27,7 +26,7 @@ type CreateBlogParams struct {
 }
 
 func (q *Queries) CreateBlog(ctx context.Context, arg CreateBlogParams) (Blog, error) {
-	row := q.db.QueryRow(ctx, createBlog, arg.Title, arg.ContentDescription, arg.RssFeed)
+	row := q.db.QueryRowContext(ctx, createBlog, arg.Title, arg.ContentDescription, arg.RssFeed)
 	var i Blog
 	err := row.Scan(
 		&i.ID,
@@ -49,13 +48,13 @@ RETURNING id, blog_id, title, content, created_at
 `
 
 type CreateBlogPostParams struct {
-	BlogID  pgtype.Int4
+	BlogID  sql.NullInt32
 	Title   string
 	Content string
 }
 
 func (q *Queries) CreateBlogPost(ctx context.Context, arg CreateBlogPostParams) (BlogPost, error) {
-	row := q.db.QueryRow(ctx, createBlogPost, arg.BlogID, arg.Title, arg.Content)
+	row := q.db.QueryRowContext(ctx, createBlogPost, arg.BlogID, arg.Title, arg.Content)
 	var i BlogPost
 	err := row.Scan(
 		&i.ID,
@@ -73,7 +72,7 @@ WHERE id = $1
 `
 
 func (q *Queries) GetBlogPost(ctx context.Context, id int32) (BlogPost, error) {
-	row := q.db.QueryRow(ctx, getBlogPost, id)
+	row := q.db.QueryRowContext(ctx, getBlogPost, id)
 	var i BlogPost
 	err := row.Scan(
 		&i.ID,
@@ -92,7 +91,7 @@ LIMIT $1
 `
 
 func (q *Queries) ListBlogPosts(ctx context.Context, limit int32) ([]BlogPost, error) {
-	rows, err := q.db.Query(ctx, listBlogPosts, limit)
+	rows, err := q.db.QueryContext(ctx, listBlogPosts, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +110,9 @@ func (q *Queries) ListBlogPosts(ctx context.Context, limit int32) ([]BlogPost, e
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -123,7 +125,7 @@ ORDER BY created_at
 `
 
 func (q *Queries) ListBlogs(ctx context.Context) ([]Blog, error) {
-	rows, err := q.db.Query(ctx, listBlogs)
+	rows, err := q.db.QueryContext(ctx, listBlogs)
 	if err != nil {
 		return nil, err
 	}
@@ -142,6 +144,9 @@ func (q *Queries) ListBlogs(ctx context.Context) ([]Blog, error) {
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -154,8 +159,8 @@ WHERE blog_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListPostsByBlogID(ctx context.Context, blogID pgtype.Int4) ([]BlogPost, error) {
-	rows, err := q.db.Query(ctx, listPostsByBlogID, blogID)
+func (q *Queries) ListPostsByBlogID(ctx context.Context, blogID sql.NullInt32) ([]BlogPost, error) {
+	rows, err := q.db.QueryContext(ctx, listPostsByBlogID, blogID)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +178,9 @@ func (q *Queries) ListPostsByBlogID(ctx context.Context, blogID pgtype.Int4) ([]
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

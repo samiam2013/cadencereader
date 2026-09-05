@@ -10,7 +10,7 @@
         var idx = 0;
         async function getData() {
             console.log("getData called")
-            const url = "http://localhost:8081/post/{{.ID}}/word/" + idx;
+            const url = "{{.Host}}/post/{{.ID}}/word/" + idx;
             try {
                 const response = await fetch(url);
                 if (!response.ok) {

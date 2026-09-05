@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"log/slog"
@@ -13,7 +14,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/somethingsoftware/cadencereader/config"
 	"github.com/somethingsoftware/cadencereader/database"
 )
@@ -28,14 +28,14 @@ func main() {
 	}
 
 	ctx := context.Background()
-	conn, queries, err := database.Open(ctx, cfg)
+	db, queries, err := database.Open(ctx, cfg)
 	if err != nil {
 		slog.Error("Failed to open database", "error", err)
 		os.Exit(1)
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", healthCheck(conn))
+	mux.HandleFunc("GET /health", healthCheck(db))
 	mux.HandleFunc("GET /", index(ctx, cfg, queries))
 	mux.HandleFunc("GET /post/{id}", post(ctx, cfg, queries))
 	mux.HandleFunc("GET /add-blog",
@@ -91,6 +91,11 @@ func index(ctx context.Context, cfg config.Config, queries *database.Queries) ht
 }
 
 func post(ctx context.Context, cfg config.Config, queries *database.Queries) http.HandlerFunc {
+	type postPlusHost struct {
+		database.BlogPost
+		Host string
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		postIDstr := r.PathValue("id")
 		postID, err := strconv.Atoi(postIDstr)
@@ -105,8 +110,12 @@ func post(ctx context.Context, cfg config.Config, queries *database.Queries) htt
 			slog.Error("Failed to get blog post", "error", err)
 			return
 		}
+		pph := postPlusHost{
+			BlogPost: post,
+			Host:     "https://dripper.cadencereader.com", // TODO: hardcoded == bad
+		}
 		tmpl := template.Must(template.ParseFiles(cfg.Extra["VIEW_FOLDER"] + "/post.gohtml"))
-		if err := tmpl.Execute(w, post); err != nil {
+		if err := tmpl.Execute(w, pph); err != nil {
 			http.Error(w, "failed to render", http.StatusInternalServerError)
 			slog.Error("Failed to execute template with post data", "error", err)
 			return
@@ -137,9 +146,10 @@ func static(path string) http.HandlerFunc {
 	}
 }
 
-func healthCheck(db *pgx.Conn) http.HandlerFunc {
+// TODO: duplicate code in dripper
+func healthCheck(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := db.Ping(context.Background()); err != nil {
+		if err := db.Ping(); err != nil {
 			slog.Error("Database ping failed", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return

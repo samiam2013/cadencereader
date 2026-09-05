@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -11,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/mmcdole/gofeed"
 	"github.com/somethingsoftware/cadencereader/config"
 	"github.com/somethingsoftware/cadencereader/database"
@@ -28,13 +28,13 @@ func main() {
 	}
 
 	ctx := context.Background()
-	_, db, err := database.Open(ctx, cfg)
+	_, queries, err := database.Open(ctx, cfg)
 	if err != nil {
 		slog.Error("Failed to open database", "error", err)
 		os.Exit(1)
 	}
 
-	blogs, err := db.ListBlogs(ctx)
+	blogs, err := queries.ListBlogs(ctx)
 	if err != nil {
 		slog.Error("Failed to list blogs for import", "error", err)
 	}
@@ -50,7 +50,7 @@ func main() {
 
 		// get existing blog post titles
 		existingPostTitles := []string{}
-		posts, err := db.ListPostsByBlogID(ctx, pgtype.Int4{Valid: true, Int32: blog.ID})
+		posts, err := queries.ListPostsByBlogID(ctx, sql.NullInt32{Valid: true, Int32: blog.ID})
 		if err != nil {
 			slog.Error("Failed to list existing blog posts", "error", err)
 			continue
@@ -83,9 +83,9 @@ func main() {
 					continue
 				}
 
-				newPost, err := db.CreateBlogPost(ctx,
+				newPost, err := queries.CreateBlogPost(ctx,
 					database.CreateBlogPostParams{
-						BlogID:  pgtype.Int4{Valid: true, Int32: blog.ID},
+						BlogID:  sql.NullInt32{Valid: true, Int32: blog.ID},
 						Title:   title,
 						Content: content,
 					})

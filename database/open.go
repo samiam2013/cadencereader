@@ -9,22 +9,15 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	mpgx "github.com/golang-migrate/migrate/v4/database/pgx"
 	"github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jackc/pgx/v5"
 	"github.com/somethingsoftware/cadencereader/config"
 )
 
-func Open(ctx context.Context, cfg config.Config) (*pgx.Conn, *Queries, error) {
-	conn, err := pgx.Connect(ctx, cfg.DatabaseURL.String())
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to connect via pgx: %w", err)
-	}
-	queries := New(conn)
-
+func Open(ctx context.Context, cfg config.Config) (*sql.DB, *Queries, error) {
 	db, err := sql.Open("pgx", cfg.DatabaseURL.String())
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to open sql/db for migration: %w", err)
 	}
-	defer db.Close()
+	queries := New(db)
 
 	m, err := openMigration(db, cfg)
 	if err != nil {
@@ -35,7 +28,7 @@ func Open(ctx context.Context, cfg config.Config) (*pgx.Conn, *Queries, error) {
 			return nil, nil, fmt.Errorf("failed to run migration: %w", err)
 		}
 	}
-	return conn, queries, nil
+	return db, queries, nil
 }
 
 func openMigration(db *sql.DB, cfg config.Config) (*migrate.Migrate, error) {
