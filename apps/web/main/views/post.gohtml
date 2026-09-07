@@ -12,6 +12,8 @@
             console.log("getData called")
             const url = "{{.Host}}/post/{{.ID}}/word/" + idx;
             try {
+                var attemptedIdx = idx;
+                idx++
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`Response status: ${response.status}`);
@@ -21,9 +23,8 @@
 
                 var div = document.getElementById('append');
                 div.innerText += (' ' + result)
-                idx++
             } catch (error) {
-                console.error(error.message);
+                console.error('failed on idx %d: %s', attemptedIdx, error.message);
             }
         }
 
