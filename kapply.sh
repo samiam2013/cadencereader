@@ -1,13 +1,14 @@
 #!/bin/bash
 
-docker build -f apps/web/main/Dockerfile -t cadencereader:latest .
-docker save cadencereader:latest | sudo k3s ctr images import -
+# Build the image using the local registry tag
+docker build -f apps/web/main/Dockerfile -t localhost:30500/cadencereader:latest .
+docker push localhost:30500/cadencereader:latest
 
-docker build -f apps/web/dripper/Dockerfile -t dripper:latest .
-docker save dripper:latest | sudo k3s ctr images import -
+docker build -f apps/web/dripper/Dockerfile -t localhost:30500/dripper:latest .
+docker push localhost:30500/dripper:latest
 
-docker build -f apps/rssimport/Dockerfile -t rssimport:latest .
-docker save rssimport:latest | sudo k3s ctr images import -
+docker build -f apps/rssimport/Dockerfile -t localhost:30500/rssimport:latest .
+docker push localhost:30500/rssimport:latest
 
 kubectl apply -f k8s/
 kubectl rollout restart deployment cadencereader 

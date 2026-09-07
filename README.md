@@ -15,6 +15,18 @@ export KUBECONFIG=$HOME/.kube/config
 ```
 I'll admit I had to fight a little to get kubectl working because when you do the k3s quick install `kubectl` is just a link to the k3s binary or something idk really
 
+and you have to create a registry entry in the k3s config
+```bash
+sudo vim /etc/rancher/k3s/registries.yaml
+```
+with the content
+```yaml
+mirrors:
+  "localhost:30500":
+    endpoint:
+      - "http://localhost:30500"
+```
+
 ### Docker
 because you have to build the containers for k3s to run
 
