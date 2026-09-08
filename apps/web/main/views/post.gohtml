@@ -10,7 +10,11 @@
         var idx = 0;
         async function getData() {
             console.log("getData called")
-            const url = "{{.Host}}/post/{{.ID}}/word/" + idx;
+            // Get the selected segment option
+            const selectElement = document.getElementById("segment_types");
+            const selectedValue = selectElement.value;
+            console.log(`segment type ${selectedValue}`);
+            const url = `{{.Host}}/post/{{.ID}}/${selectedValue}/` + idx;
             try {
                 var attemptedIdx = idx;
                 idx++
@@ -38,6 +42,14 @@
         }
     </script>
     <h2>Cadence Reader</h2>
+
+    <label>segment type:</label>
+    <select name="segment_type" id="segment_types">
+        <option value="word" selected>Word</option>
+        <option value="sentence">Sentence</option>
+        <option value="paragraph">Paragraph</option>
+    </select>
+
     <h4>{{.Title}}</h4>
     <br />
     <button onclick="getData()">get data</button>
@@ -47,7 +59,6 @@
     <br />
     <a href="/add-blog">Add your Blog's RSS feed here</a><br />
     <a href="https://github.com/somethingsoftware/cadencereader">This site is open source! check out the code here</a>
-    </p>
 </body>
 
 </html>
