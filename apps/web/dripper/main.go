@@ -110,7 +110,10 @@ func drip(ctx context.Context, cfg config.Config, queries *database.Queries) htt
 		case "word":
 			parts = strings.Split(post.Content, " ")
 		case "sentence":
-			parts = strings.Split(post.Content, ".?!;")
+			splitFunc := func(r rune) bool {
+				return strings.ContainsRune(".?!;", r)
+			}
+			parts = strings.FieldsFunc(post.Content, splitFunc)
 		case "paragraph":
 			parts = strings.Split(post.Content, "\n")
 		}
