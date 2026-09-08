@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -35,13 +34,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", healthCheck(db))
+	mux.HandleFunc("GET /health", config.HealthCheck(db))
 	mux.HandleFunc("GET /post/{post_id}/{segment_type}/{index}", drip(ctx, cfg, queries))
 	intrC := make(chan os.Signal, 1)
 	signal.Notify(intrC, syscall.SIGINT, syscall.SIGTERM)
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", 8081), // TODO add this port to config
+		Addr:         fmt.Sprintf("%s:%d", cfg.DripperHost, cfg.DripperHTTPport),
 		Handler:      mux,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -124,16 +123,5 @@ func drip(ctx context.Context, cfg config.Config, queries *database.Queries) htt
 
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(parts[idx]))
-	}
-}
-
-func healthCheck(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := db.Ping(); err != nil {
-			slog.Error("Database ping failed", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
 	}
 }

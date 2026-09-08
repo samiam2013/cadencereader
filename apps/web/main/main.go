@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"io"
 	"log/slog"
@@ -35,7 +34,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", healthCheck(db))
+	mux.HandleFunc("GET /health", config.HealthCheck(db))
 	mux.HandleFunc("GET /", index(ctx, cfg, queries))
 	mux.HandleFunc("GET /post/{id}", post(ctx, cfg, queries))
 	mux.HandleFunc("GET /add-blog",
@@ -147,17 +146,5 @@ func static(path string) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-	}
-}
-
-// TODO: duplicate code in dripper
-func healthCheck(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := db.Ping(); err != nil {
-			slog.Error("Database ping failed", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
 	}
 }

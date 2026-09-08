@@ -1,8 +1,10 @@
 package config
 
 import (
+	"database/sql"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -90,4 +92,16 @@ func Load(extraEnv ...string) (Config, error) {
 		MigrationFolder: migrationFolder,
 		Extra:           extraEnvMap,
 	}, nil
+}
+
+// this might go in a /common package or something in the future
+func HealthCheck(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Ping(); err != nil {
+			slog.Error("Database ping failed", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
 }
