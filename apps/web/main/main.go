@@ -46,7 +46,7 @@ func main() {
 	signal.Notify(intrC, syscall.SIGINT, syscall.SIGTERM)
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.HTTPport),
+		Addr:         fmt.Sprintf("%s:%d", cfg.MainHost, cfg.MainHTTPport),
 		Handler:      mux,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -110,9 +110,13 @@ func post(ctx context.Context, cfg config.Config, queries *database.Queries) htt
 			slog.Error("Failed to get blog post", "error", err)
 			return
 		}
+		dh := cfg.DripperHost
+		if cfg.AppEnv == config.Local {
+			dh = fmt.Sprintf("http://%s:%d", cfg.DripperHost, cfg.DripperHTTPport)
+		}
 		pph := postPlusHost{
 			BlogPost: post,
-			Host:     "https://dripper.cadencereader.com", // TODO: hardcoded == bad
+			Host:     dh,
 		}
 		tmpl := template.Must(template.ParseFiles(cfg.Extra["VIEW_FOLDER"] + "/post.gohtml"))
 		if err := tmpl.Execute(w, pph); err != nil {

@@ -13,13 +13,16 @@ type AppEnvironment uint8
 
 const (
 	_ AppEnvironment = iota
-	local
-	prod
+	Local
+	Prod
 )
 
 type Config struct {
 	AppEnv          AppEnvironment
-	HTTPport        uint16
+	MainHost        string
+	MainHTTPport    uint16
+	DripperHost     string
+	DripperHTTPport uint16
 	DatabaseURL     *url.URL
 	MigrationFolder string
 	Extra           map[string]string
@@ -39,16 +42,25 @@ func Load(extraEnv ...string) (Config, error) {
 	var appEnv AppEnvironment
 	switch ae {
 	case "local":
-		appEnv = local
+		appEnv = Local
 	case "prod":
-		appEnv = prod
+		appEnv = Prod
 	default:
 		slog.Error("Failed to parse app environment", "APP_ENV", ae)
 		os.Exit(1)
 	}
 
-	hp := getEnv("HTTP_PORT")
-	httpPort, err := strconv.ParseUint(hp, 10, 16)
+	MainHost := getEnv("MAIN_HOST")
+	mhp := getEnv("MAIN_HTTP_PORT")
+	MainHTTPport, err := strconv.ParseUint(mhp, 10, 16)
+	if err != nil {
+		slog.Error("Failed to parse port number", "error", err)
+		os.Exit(1)
+	}
+
+	DripperHost := getEnv("DRIPPER_HOST")
+	dhp := getEnv("DRIPPER_HTTP_PORT")
+	DripperHTTPport, err := strconv.ParseUint(dhp, 10, 16)
 	if err != nil {
 		slog.Error("Failed to parse port number", "error", err)
 		os.Exit(1)
@@ -70,7 +82,10 @@ func Load(extraEnv ...string) (Config, error) {
 
 	return Config{
 		AppEnv:          appEnv,
-		HTTPport:        uint16(httpPort),
+		MainHost:        MainHost,
+		MainHTTPport:    uint16(MainHTTPport),
+		DripperHost:     DripperHost,
+		DripperHTTPport: uint16(DripperHTTPport),
 		DatabaseURL:     dbURL,
 		MigrationFolder: migrationFolder,
 		Extra:           extraEnvMap,

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 OS=$(uname)
 if [ $OS != 'Darwin' ]; then 
@@ -43,6 +44,6 @@ echo "running rss import"
 ./rssbin
 
 echo "starting broswer";
-(sleep 1; open http://localhost:8080) &
+(sleep 1; open http://$MAIN_HOST:$MAIN_HTTP_PORT) &
 ./dripbin & ./crbin && kill $!
 
